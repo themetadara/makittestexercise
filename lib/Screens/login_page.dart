@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_user_app/Screens/user_page.dart';
 import '../components/CustomTextField.dart';
 import '../styles.dart';
+import 'cust_repo.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -59,9 +59,9 @@ class _LoginPageState extends State<LoginPage> {
                   child: Container(
                     decoration: const BoxDecoration(
                         image: DecorationImage(
-                      image: AssetImage('images/bg.png'),
-                      fit: BoxFit.fill,
-                    )),
+                          image: AssetImage('images/bg.png'),
+                          fit: BoxFit.fill,
+                        )),
                   ),
                 ),
                 Expanded(
@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                                 onPressed: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => UserPage()),);
+                                    MaterialPageRoute(builder: (context) => CustRepo()),);
                                 },
                                 child: Text(
                                   'Войти',

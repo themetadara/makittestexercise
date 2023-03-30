@@ -1,10 +1,15 @@
-import 'dart:convert';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/app_blocs.dart';
+import '../blocs/app_events.dart';
+import '../blocs/app_states.dart';
+import '../models/user_model.dart';
+import '../repos/repositories.dart';
 
 class UserPage extends StatefulWidget {
-  const UserPage({Key? key}) : super(key: key);
+  const UserPage({super.key});
+
   @override
   State<UserPage> createState() => _UserPageState();
 }
@@ -16,7 +21,6 @@ class _UserPageState extends State<UserPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    readJson();
   }
 
   @override
@@ -37,33 +41,23 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  List _items = [];
-
-  Future<void> readJson() async {
-    final String response = await rootBundle.loadString('assets/users.json');
-    final data = await json.decode(response);
-    setState(() {
-      _items = data["users"];
-      print("number of items ${_items.length}");
-    });
-  }
-
-  bool jsonChecking(){
-    readJson();
-    if(_items.isNotEmpty){
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _items.isNotEmpty
-        ? Scaffold(
-            backgroundColor: Colors.white,
-            body: SafeArea(
-              child: CustomScrollView(
+    return BlocProvider(
+      create: (context) => UserBloc(
+        RepositoryProvider.of<UserRepository>(context),
+      )..add(LoadUserEvent()),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: BlocBuilder<UserBloc, UserState>(
+          builder: (context, state){
+            if (state is UserLoadingState){
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if(state is UserLoadedState){
+              List<UserModel> userList = state.users;
+              return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
                   SliverAppBar(
@@ -95,24 +89,24 @@ class _UserPageState extends State<UserPage> {
                   ),
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
+                          (BuildContext context, int index) {
                         return Container(
-                          height: 80,
+                          height: 130,
                           padding: EdgeInsets.symmetric(
                             horizontal: 21,
                             vertical: 11,
                           ),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Image.asset('images/user-circle.png',
-                                  fit: BoxFit.fill),
+                              CircleAvatar(backgroundImage: NetworkImage(userList[index].avatar),),
                               SizedBox(width: 21),
                               Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _items[index]["name"],
+                                    userList[index].firstname + ' ' + userList[index].lastname,
                                     style: TextStyle(
                                         fontFamily: 'SF_Pro',
                                         fontSize: 20,
@@ -120,7 +114,7 @@ class _UserPageState extends State<UserPage> {
                                         color: Colors.black),
                                   ),
                                   Text(
-                                    _items[index]["email"],
+                                    userList[index].email,
                                     style: TextStyle(
                                       fontFamily: 'SF_Pro',
                                       fontSize: 13,
@@ -128,63 +122,24 @@ class _UserPageState extends State<UserPage> {
                                       color: Color(0xFF8A8A8F),
                                     ),
                                   ),
-                                  Text(
-                                    _items[index]["username"],
-                                    style: TextStyle(
-                                      fontFamily: 'SF_Pro',
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.black,
-                                    ),
-                                  )
+
                                 ],
                               ),
                             ],
                           ),
                         );
                       },
-                      childCount: _items.length,
+                      childCount: userList.length,
                     ),
                   ),
                 ],
-              ),
-            ),
-          )
-        : Scaffold(
-            body: Container(
-              width: double.maxFinite,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset('images/warning-sign 1.png'),
-                  SizedBox(
-                    height: 32,
-                  ),
-                  Text('Не удалось загрузить информацию',style: TextStyle(
-                    fontFamily: 'SF_Pro',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),),
-                  SizedBox(
-                    height: 32,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      jsonChecking();
-                    },
-                    child: Text('Обновить'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF9B51E0),
-                      fixedSize: Size(230, 38),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+              );
+            } else {
+              return Container();
+            }
+          },
+        ),
+      ),
+    );
   }
 }

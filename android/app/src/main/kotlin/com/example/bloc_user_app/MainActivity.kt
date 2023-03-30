@@ -1,4 +1,4 @@
-package com.example.flutter_user_app
+package com.example.bloc_user_app
 
 import io.flutter.embedding.android.FlutterActivity
 
